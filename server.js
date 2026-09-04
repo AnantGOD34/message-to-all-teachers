@@ -11,7 +11,7 @@ app.use(express.json());
 app.use(cors());
 
 // In-memory data store (In production, replace with MongoDB, PostgreSQL, etc.)
-let vibeCount = 420;
+let vibeCount = 0;
 let shoutouts = [
     { id: 1, text: "⭐ Shoutout to every teacher who goes the extra mile to help us learn. You're wonderful!" },
     { id: 2, text: "🎉 Happy Teachers Day! Thank you for your endless patience and guidance." }
