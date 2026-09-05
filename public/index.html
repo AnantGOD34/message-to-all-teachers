@@ -74,11 +74,11 @@
             
             <div class="flex justify-center items-center gap-4 mb-4">
                 <button id="vibeBtn" class="bg-neonCyan text-black font-extrabold px-8 py-3 rounded-xl hover:bg-neonYellow transition transform active:scale-95 text-lg shadow-lg">
-                    Send Cheers 🎉 (<span id="vibeCount">...</span>)
+                    Send Cheers 🎉 (<span id="vibeCount">0</span>)
                 </button>
             </div>
             <div id="vibeMessage" class="h-6 text-neonYellow font-semibold text-sm transition-opacity opacity-0">
-                +100 Appreciation saved to server! 🚀
+                +1 Appreciation saved to server! 🚀
             </div>
         </div>
 
@@ -166,20 +166,21 @@
     <script>
         const API_URL = ''; // Same origin
 
-        // Fetch initial data from server
-        async function loadData() {
-            try {
-                const response = await fetch(`${API_URL}/api/data`);
-                const data = await response.json();
+        // Connect to Server-Sent Events for real-time global simulation
+        function initRealtimeStream() {
+            const eventSource = new EventSource(`${API_URL}/api/stream`);
+
+            eventSource.onmessage = (event) => {
+                const data = JSON.parse(event.data);
                 
-                // Update vibe counter
+                // Update counter and list dynamically
                 document.getElementById('vibeCount').textContent = data.vibeCount;
-                
-                // Render shoutouts
                 renderShoutouts(data.shoutouts);
-            } catch (err) {
-                console.error('Error loading data from server:', err);
-            }
+            };
+
+            eventSource.onerror = (err) => {
+                console.error('SSE connection error, attempting reconnect...', err);
+            };
         }
 
         function renderShoutouts(shoutouts) {
@@ -187,16 +188,16 @@
             shoutoutsList.innerHTML = '';
             shoutouts.forEach(item => {
                 const card = document.createElement('div');
-                card.className = 'bg-neutral-950 border border-neutral-800 p-3 rounded-lg text-sm text-neutral-300';
+                card.className = 'bg-neutral-950 border border-neutral-800 p-3 rounded-lg text-sm text-neutral-300 transition-all duration-300';
                 card.textContent = item.text;
                 shoutoutsList.appendChild(card);
             });
         }
 
-        // Load data on page load
-        loadData();
+        // Initialize stream connection on page load
+        initRealtimeStream();
 
-        // Vibe Meter Logic
+        // Vibe Meter Logic (Manual Click)
         const vibeBtn = document.getElementById('vibeBtn');
         const vibeMessage = document.getElementById('vibeMessage');
 
@@ -205,7 +206,6 @@
                 const response = await fetch(`${API_URL}/api/vibe`, { method: 'POST' });
                 const data = await response.json();
                 if(data.success) {
-                    document.getElementById('vibeCount').textContent = data.vibeCount;
                     vibeMessage.style.opacity = '1';
                     setTimeout(() => {
                         vibeMessage.style.opacity = '0';
@@ -235,7 +235,6 @@
                 });
                 const data = await response.json();
                 if(data.success) {
-                    renderShoutouts(data.shoutouts);
                     shoutoutInput.value = '';
                     customModal.classList.remove('hidden');
                 }
